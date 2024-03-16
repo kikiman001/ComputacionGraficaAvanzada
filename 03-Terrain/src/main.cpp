@@ -723,6 +723,8 @@ bool processInput(bool continueApplication)
 			fileName = "../animaciones/animation_buzz_joints.txt";
 		if (modelSelected == 4)
 			fileName = "../animaciones/animation_buzz.txt";
+		if (modelSelected == 5)
+			modelSelected = 5;
 		std::cout << "modelSelected:" << modelSelected << std::endl;
 	}
 	else if (glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
@@ -866,19 +868,19 @@ bool processInput(bool continueApplication)
 	}
 
 		// Controles de MatrixTrooper
-	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
 		MatrixTrooper = glm::rotate(MatrixTrooper, 0.02f, glm::vec3(0, 1, 0));
 		
-	} else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+	} else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
 		MatrixTrooper = glm::rotate(MatrixTrooper, -0.02f, glm::vec3(0, 1, 0));
 		
 	}
-	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
-		MatrixTrooper = glm::translate(MatrixTrooper, glm::vec3(0.02, 0.0, 0.0));
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+		MatrixTrooper = glm::translate(MatrixTrooper, glm::vec3(-0.02, 0.0, 0.0));
 		
 	}
-	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
-		MatrixTrooper = glm::translate(MatrixTrooper, glm::vec3(-0.02, 0.0, 0.0));
+	else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+		MatrixTrooper = glm::translate(MatrixTrooper, glm::vec3(0.02, 0.0, 0.0));
 		
 	}
 
@@ -1320,9 +1322,21 @@ void applicationLoop()
 		// else flechas then render "reposo"
 
 		
+		MatrixTrooper[3][1] = terrain.getHeightTerrain(
+			MatrixTrooper[3][0], MatrixTrooper[3][2]);
+		// Para que se incline respecto a la normal
+		ejey = glm::normalize(
+			terrain.getNormalTerrain(
+				MatrixTrooper[3][0], MatrixTrooper[3][2]));
+		 ejez = glm::normalize(MatrixTrooper[2]);
+		 ejex = glm::normalize(glm::cross(ejey, ejez));
+		ejez = glm::normalize(glm::cross(ejex, ejey));
+		MatrixTrooper[0] = glm::vec4(ejex, 0.0);
+		MatrixTrooper[1] = glm::vec4(ejey, 0.0);
+		MatrixTrooper[2] = glm::vec4(ejez, 0.0);
+
 		glm::mat4 modelMatrixTrooperBody = glm::mat4(MatrixTrooper);
-		modelMatrixTrooperBody = glm::rotate(modelMatrixTrooperBody, glm::radians(180.0f), glm::vec3(0, 1, 0));
-		modelMatrixTrooperBody = glm::translate(modelMatrixTrooperBody, glm::vec3(0.0, 1.2, 0));
+		
 		
 		Trooper.render(modelMatrixTrooperBody);
 		
