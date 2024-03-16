@@ -374,7 +374,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	cyborgModelAnimate.loadModel("../models/cyborg/cyborg.fbx");
 	cyborgModelAnimate.setShader(&shaderMulLighting);
 
-	Trooper.loadModel("../models/trooper/StormTrooper_.fbx");
+	Trooper.loadModel("../models/trooper/StormTrooper.obj");
 	Trooper.setShader(&shaderMulLighting);
 
 
@@ -1167,7 +1167,7 @@ void applicationLoop() {
 		glm::mat4 modelMatrixTrooperBody = glm::mat4(MatrixTrooper);
 		modelMatrixTrooperBody = glm::rotate(modelMatrixTrooperBody, glm::radians(180.0f), glm::vec3(0, 1, 0));
 		modelMatrixTrooperBody = glm::translate(modelMatrixTrooperBody, glm::vec3(0.0, 1.2, 0));
-		Trooper.setAnimationIndex(1);
+		
 		Trooper.render(modelMatrixTrooperBody);
 		animationtrooperIndex=0;
 
