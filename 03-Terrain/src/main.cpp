@@ -1,13 +1,13 @@
 #define _USE_MATH_DEFINES
 #include <cmath>
-//glew include
+// glew include
 #include <GL/glew.h>
 
-//std includes
+// std includes
 #include <string>
 #include <iostream>
 
-//glfw include
+// glfw include
 #include <GLFW/glfw3.h>
 
 // program include
@@ -22,7 +22,7 @@
 #include "Headers/Box.h"
 #include "Headers/FirstPersonCamera.h"
 
-//GLM include
+// GLM include
 #define GLM_FORCE_RADIANS
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -32,6 +32,9 @@
 
 // Include loader Model class
 #include "Headers/Model.h"
+
+// Include del terreno
+#include "Headers/Terrain.h"
 
 #include "Headers/AnimationUtils.h"
 
@@ -99,6 +102,8 @@ Model guardianModelAnimate;
 // Cybog
 Model cyborgModelAnimate;
 
+//Terrain terrain(-1, -1, 50, 16, "../Textures/heightmap.png");
+Terrain terrain(-1, -1, 80, 6, "../Textures/2024.png");
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
 GLuint skyboxTextureID;
 
@@ -362,7 +367,12 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	cyborgModelAnimate.loadModel("../models/cyborg/cyborg.fbx");
 	cyborgModelAnimate.setShader(&shaderMulLighting);
 
-	camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
+
+	// terreno
+	terrain.init();
+	terrain.setShader(&shaderMulLighting);
+
+	camera->setPosition(glm::vec3(0.0, 10.0, 4.0));
 	
 	// Carga de texturas para el skybox
 	Texture skyboxTexture = Texture("");
@@ -577,6 +587,8 @@ void destroy() {
 	cowboyModelAnimate.destroy();
 	guardianModelAnimate.destroy();
 	cyborgModelAnimate.destroy();
+
+	terrain.destroy();
 
 	// Textures Delete
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -906,7 +918,7 @@ void applicationLoop() {
 
 		/*******************************************
 		 * Cesped
-		 *******************************************/
+		 ******************************************
 		glm::mat4 modelCesped = glm::mat4(1.0);
 		modelCesped = glm::translate(modelCesped, glm::vec3(0.0, 0.0, 0.0));
 		modelCesped = glm::scale(modelCesped, glm::vec3(200.0, 0.001, 200.0));
@@ -917,16 +929,35 @@ void applicationLoop() {
 		boxCesped.render(modelCesped);
 		shaderMulLighting.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
 		glBindTexture(GL_TEXTURE_2D, 0);
+		*/
+
+		/*******************************************
+		 * Terreno
+		 *******************************************/
+		glBindTexture(GL_TEXTURE_2D,textureCespedID);
+		glActiveTexture(GL_TEXTURE0);
+		
+		terrain.setPosition(glm::vec3(25,0,25));
+		//terrain.enableWireMode();//malla
+		shaderMulLighting.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(50.0f)));
+		terrain.render();
+		shaderMulLighting.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(1.0f))); // Lo regresamos a 1 porque todos los modelos lo comparten
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+
+
 
 		/*******************************************
 		 * Custom objects obj
 		 *******************************************/
 		//Rock render
+		matrixModelRock[3][1] = terrain.getHeightTerrain(matrixModelRock[3][0], matrixModelRock[3][2]);
 		modelRock.render(matrixModelRock);
 		// Forze to enable the unit texture to 0 always ----------------- IMPORTANT
 		glActiveTexture(GL_TEXTURE0);
 
 		// Render for the aircraft model
+		modelMatrixAircraft[3][1] = terrain.getHeightTerrain(modelMatrixAircraft[3][0], modelMatrixAircraft[3][2]);
 		modelAircraft.render(modelMatrixAircraft);
 
 		// Render for the eclipse car
@@ -1066,6 +1097,18 @@ void applicationLoop() {
 		/*****************************************
 		 * Objetos animados por huesos
 		 * **************************************/
+		// Para que camine sobre el plano
+		glm::vec3 normal = terrain.getNormalTerrain(modelMatrixMayow[3][0], modelMatrixMayow[3][2]);
+
+		glm::vec3 ejex = glm::vec3 (modelMatrixMayow[0]);
+		glm::vec3 ejez =glm::normalize( glm::cross(ejex,normal) );//se calcula la perpendicular
+		ejex=glm::normalize( glm::cross(normal,ejez));
+
+		modelMatrixMayow[0]=glm::vec4(ejex,0.0);
+		modelMatrixMayow[1]=glm::vec4(normal,0.0);//ejey
+		modelMatrixMayow[3][1] = terrain.getHeightTerrain(
+			modelMatrixMayow[3][0], modelMatrixMayow[3][2]);
+		
 		glm::mat4 modelMatrixMayowBody = glm::mat4(modelMatrixMayow);
 		modelMatrixMayowBody = glm::scale(modelMatrixMayowBody, glm::vec3(0.021f));
 		mayowModelAnimate.setAnimationIndex(animationMayowIndex);
