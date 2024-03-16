@@ -102,6 +102,9 @@ Model guardianModelAnimate;
 // Cybog
 Model cyborgModelAnimate;
 
+//Storm trooper
+Model Trooper;
+
 //Terrain terrain(-1, -1, 50, 16, "../Textures/heightmap.png");
 Terrain terrain(-1, -1, 80, 6, "../Textures/2024.png");
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
@@ -139,7 +142,11 @@ glm::mat4 modelMatrixCowboy = glm::mat4(1.0f);
 glm::mat4 modelMatrixGuardian = glm::mat4(1.0f);
 glm::mat4 modelMatrixCyborg = glm::mat4(1.0f);
 
+glm::mat4 MatrixTrooper = glm::mat4(1.0f);
+
 int animationMayowIndex = 1;
+
+int animationtrooperIndex = 1;
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
 float rotBuzzHead = 0.0, rotBuzzLeftarm = 0.0, rotBuzzLeftForeArm = 0.0, rotBuzzLeftHand = 0.0;
 int modelSelected = 0;
@@ -367,6 +374,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	cyborgModelAnimate.loadModel("../models/cyborg/cyborg.fbx");
 	cyborgModelAnimate.setShader(&shaderMulLighting);
 
+	Trooper.loadModel("../models/trooper/StormTrooper_.fbx");
+	Trooper.setShader(&shaderMulLighting);
+
 
 	// terreno
 	terrain.init();
@@ -587,6 +597,7 @@ void destroy() {
 	cowboyModelAnimate.destroy();
 	guardianModelAnimate.destroy();
 	cyborgModelAnimate.destroy();
+	Trooper.destroy();
 
 	terrain.destroy();
 
@@ -666,7 +677,7 @@ bool processInput(bool continueApplication) {
 	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS){
 		enableCountSelected = false;
 		modelSelected++;
-		if(modelSelected > 4)
+		if(modelSelected > 5)
 			modelSelected = 0;
 		if(modelSelected == 1)
 			fileName = "../animaciones/animation_dart_joints.txt";
@@ -676,6 +687,8 @@ bool processInput(bool continueApplication) {
 			fileName = "../animaciones/animation_buzz_joints.txt";
 		if (modelSelected == 4)
 			fileName = "../animaciones/animation_buzz.txt";
+		if (modelSelected == 5)
+			modelSelected = 5;
 		std::cout << "modelSelected:" << modelSelected << std::endl;
 	}
 	else if(glfwGetKey(window, GLFW_KEY_TAB) == GLFW_RELEASE)
@@ -811,6 +824,23 @@ bool processInput(bool continueApplication) {
 		animationMayowIndex = 0;
 	}
 
+	// Controles de MatrixTrooper
+	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS){
+		MatrixTrooper = glm::rotate(MatrixTrooper, 0.02f, glm::vec3(0, 1, 0));
+		animationtrooperIndex = 0;
+	} else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS){
+		MatrixTrooper = glm::rotate(MatrixTrooper, -0.02f, glm::vec3(0, 1, 0));
+		animationtrooperIndex= 0;
+	}
+	if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS){
+		MatrixTrooper = glm::translate(MatrixTrooper, glm::vec3(0.02, 0.0, 0.0));
+		animationtrooperIndex = 1;
+	}
+	else if (modelSelected == 0 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS){
+		MatrixTrooper = glm::translate(MatrixTrooper, glm::vec3(-0.02, 0.0, 0.0));
+		animationtrooperIndex = 1;
+	}
+
 	glfwPollEvents();
 	return continueApplication;
 }
@@ -849,6 +879,9 @@ void applicationLoop() {
 	modelMatrixGuardian = glm::rotate(modelMatrixGuardian, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
 
 	modelMatrixCyborg = glm::translate(modelMatrixCyborg, glm::vec3(5.0f, 0.05, 0.0f));
+
+	MatrixTrooper = glm::translate(MatrixTrooper, glm::vec3(0.0, 0.5, 0.0));
+
 
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
@@ -1097,6 +1130,11 @@ void applicationLoop() {
 		/*****************************************
 		 * Objetos animados por huesos
 		 * **************************************/
+
+		
+
+
+
 		// Para que camine sobre el plano
 		glm::vec3 normal = terrain.getNormalTerrain(modelMatrixMayow[3][0], modelMatrixMayow[3][2]);
 
@@ -1114,6 +1152,25 @@ void applicationLoop() {
 		mayowModelAnimate.setAnimationIndex(animationMayowIndex);
 		mayowModelAnimate.render(modelMatrixMayowBody);
 		animationMayowIndex = 1;
+/*
+		normal  = terrain.getNormalTerrain(MatrixTrooper[3][0], MatrixTrooper[3][2]);
+		 ejex = glm::vec3 (MatrixTrooper[0]);
+		 ejez =glm::normalize( glm::cross(ejex,normal) );//se calcula la perpendicular
+		ejex=glm::normalize( glm::cross(normal,ejez));
+
+		MatrixTrooper[0]=glm::vec4(ejex,0.0);
+		MatrixTrooper[1]=glm::vec4(normal,0.0);//ejey
+		MatrixTrooper[3][1] = terrain.getHeightTerrain(
+			MatrixTrooper[3][0], MatrixTrooper[3][2]);*/
+
+		
+		glm::mat4 modelMatrixTrooperBody = glm::mat4(MatrixTrooper);
+		modelMatrixTrooperBody = glm::rotate(modelMatrixTrooperBody, glm::radians(180.0f), glm::vec3(0, 1, 0));
+		modelMatrixTrooperBody = glm::translate(modelMatrixTrooperBody, glm::vec3(0.0, 1.2, 0));
+		Trooper.setAnimationIndex(1);
+		Trooper.render(modelMatrixTrooperBody);
+		animationtrooperIndex=0;
+
 
 		glm::mat4 modelMatrixCowboyBody = glm::mat4(modelMatrixCowboy);
 		modelMatrixCowboyBody = glm::scale(modelMatrixCowboyBody, glm::vec3(0.0021f));
@@ -1127,6 +1184,9 @@ void applicationLoop() {
 		modelMatrixCyborgBody = glm::scale(modelMatrixCyborgBody, glm::vec3(0.009f));
 		cyborgModelAnimate.setAnimationIndex(1);
 		cyborgModelAnimate.render(modelMatrixCyborgBody);
+
+		
+		
 
 		/*******************************************
 		 * Skybox
