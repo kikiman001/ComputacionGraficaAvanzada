@@ -101,7 +101,7 @@ Model cowboyModelAnimate;
 Model guardianModelAnimate;
 // Cybog
 Model cyborgModelAnimate;
-// model lily
+
 Model Trooper;
 
 // terreno (posición X, posición Z,
@@ -889,7 +889,7 @@ bool processInput(bool continueApplication)
 	{
 		modelMatrixLambo = glm::rotate(modelMatrixLambo, 0.02f, glm::vec3(0, 1, 0));
 		modelMatrix_LamboFLW = glm::rotate(modelMatrix_LamboFLW, 0.02f, glm::vec3(0, 1, 0));
-		modelMatrix_LamboFRW = glm::rotate(modelMatrix_LamboFRW, 0.02f, glm::vec3(0, 1, 0));
+		modelMatrix_LamboFRW = glm::rotate(modelMatrix_LamboFRW, 0.02f, glm::vec3(0, 1, 0));	
 		modelMatrix_LamboRLW = glm::rotate(modelMatrix_LamboRLW, 0.02f, glm::vec3(0, 1, 0));
 		modelMatrix_LamboRRW = glm::rotate(modelMatrix_LamboRRW, 0.02f, glm::vec3(0, 1, 0));
 	}
@@ -1317,9 +1317,9 @@ void applicationLoop()
 		modelMatrixCyborgBody = glm::scale(
 			modelMatrixCyborgBody, glm::vec3(0.009f));
 		cyborgModelAnimate.setAnimationIndex(1);
-		// if flechas then render "caminar"
+		
 		cyborgModelAnimate.render(modelMatrixCyborgBody);
-		// else flechas then render "reposo"
+		
 
 		
 		MatrixTrooper[3][1] = terrain.getHeightTerrain(
@@ -1337,7 +1337,7 @@ void applicationLoop()
 
 		glm::mat4 modelMatrixTrooperBody = glm::mat4(MatrixTrooper);
 		
-		
+		//Trooper.setAnimationIndex(0);
 		Trooper.render(modelMatrixTrooperBody);
 		
 
