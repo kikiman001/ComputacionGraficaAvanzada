@@ -104,7 +104,7 @@ Model guardianModelAnimate;
 // Cybog
 Model cyborgModelAnimate;
 // Terrain model instance
-Terrain terrain(-1, -1, 200, 8, "../Textures/heightmap.png");
+Terrain terrain(-1, -1, 200, 8, "../Textures/20242.png");
 
 Model Lamp1;
 Model Lampp2;
@@ -194,16 +194,18 @@ float rotHelHelBack = 0.0;
 std::vector<glm::vec3> lamp1Position = {
 	glm::vec3(-7.03, 0.0, -19.14),
 	glm::vec3(24.41, 0.0, -34.57),
-	glm::vec3(-10.15, 0.0, -54.10)
+	glm::vec3(-10.15, 0.0, -54.10),
+	glm::vec3(-7.22, 0.0, -53.23)
 };
 
-std::vector<float> lamp1Orientarion = {	-17.0, -82.67, 23.7};
+std::vector<float> lamp1Orientarion = {	-17.0, -82.67, 23.7,29.65};
 
 std::vector<glm::vec3> lamp2Position = {
 	glm::vec3(-36.52, 0.0, -23.24),
-	glm::vec3(-52.73, 0.0, -3.8)
+	glm::vec3(-52.73, 0.0, -3.8),
+	glm::vec3(19.92, 0.0, -8.0)
 };										// ángulo_1, ángulo_2, ángulo_3
-std::vector<float> lamp2Orientarion = {	90.0+21.37,90.0-65.0}; 
+std::vector<float> lamp2Orientarion = {	90.0+21.37,90.0-65.0,-90-0+22.7}; 
 
 
 // Var animate lambo dor
@@ -1043,8 +1045,62 @@ void applicationLoop() {
 		/*******************************************
 		 * Propiedades SpotLights
 		 *******************************************/
-		shaderMulLighting.setInt("spotLightCount", 0);
-		shaderTerrain.setInt("spotLightCount", 0);
+		shaderMulLighting.setInt("spotLightCount", 1);
+		shaderTerrain.setInt("spotLightCount", 1);
+
+		glm::vec3 spotPosition = glm::vec3(modelMatrixHeli * glm::vec4(0.0, 0.16, 2, 1.0));
+		
+		shaderMulLighting.setVectorFloat3(
+			"spotLights[0].light.ambient",
+			glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
+		shaderMulLighting.setVectorFloat3(
+			"spotLights[0].light.diffuse",
+			glm::value_ptr(glm::vec3(0.5, 0.5, 0.0)));
+		shaderMulLighting.setVectorFloat3(
+			"spotLights[0].light.specular",
+			glm::value_ptr(glm::vec3(0.7, 0.7, 0.7)));
+		shaderMulLighting.setVectorFloat3(
+			"spotLights[0].position",
+			glm::value_ptr(spotPosition));
+		shaderMulLighting.setVectorFloat3(
+			"spotLights[0].direction",
+			glm::value_ptr(glm::vec3(0.0, -1.0, 0.0)));
+		shaderMulLighting.setFloat(
+			"spotLights[0].constant", 1.0);
+		shaderMulLighting.setFloat(
+			"spotLights[0].linear", 0.09);
+		shaderMulLighting.setFloat(
+			"spotLights[0].quadratic", 0.02);
+		shaderMulLighting.setFloat(
+			"spotLights[0].cutOff", cos(glm::radians(12.5f)));
+		shaderMulLighting.setFloat(
+			"spotLights[0].outerCutOff", cos(glm::radians(15.0f)));
+
+		shaderTerrain.setVectorFloat3(
+			"spotLights[0].light.ambient",
+			glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
+		shaderTerrain.setVectorFloat3(
+			"spotLights[0].light.diffuse",
+			glm::value_ptr(glm::vec3(0.5, 0.5, 0.0)));
+		shaderTerrain.setVectorFloat3(
+			"spotLights[0].light.specular",
+			glm::value_ptr(glm::vec3(0.7, 0.7, 0.7)));
+		shaderTerrain.setVectorFloat3(
+			"spotLights[0].position",
+			glm::value_ptr(spotPosition));
+		shaderTerrain.setVectorFloat3(
+			"spotLights[0].direction",
+			glm::value_ptr(glm::vec3(0.0, -1.0, 0.0)));
+		shaderTerrain.setFloat(
+			"spotLights[0].constant", 1.0);
+		shaderTerrain.setFloat(
+			"spotLights[0].linear", 0.09);
+		shaderTerrain.setFloat(
+			"spotLights[0].quadratic", 0.02);
+		shaderTerrain.setFloat(
+			"spotLights[0].cutOff", cos(glm::radians(15.0f)));
+		shaderTerrain.setFloat(
+			"spotLights[0].outerCutOff", cos(glm::radians(15.0f)));
 
 		/*******************************************
 		 * Propiedades PointLights
