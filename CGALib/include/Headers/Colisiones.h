@@ -109,6 +109,7 @@ bool testSphereSphereIntersection(AbstractModel::SBB sbb1, AbstractModel::SBB sb
 
 bool testSphereOBox(AbstractModel::SBB sbb, AbstractModel::OBB obb){
 	float d = 0;
+	//pregunta examen explicar esto como hacer los pasos apara una sdd contra un obb
 	glm::quat qinv = glm::inverse(obb.u);
 	sbb.c = qinv * glm::vec4(sbb.c, 1.0);
 	obb.c = qinv * glm::vec4(obb.c, 1.0);
