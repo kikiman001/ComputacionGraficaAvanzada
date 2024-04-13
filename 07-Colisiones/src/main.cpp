@@ -38,6 +38,7 @@
 #include "Headers/Terrain.h"
 
 #include "Headers/AnimationUtils.h"
+#include "Headers/Colisiones.h"
 
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 
@@ -58,6 +59,7 @@ std::shared_ptr<Camera> camera(new ThirdPersonCamera());
 float distanceFromTarget = 7.0;
 
 Sphere skyboxSphere(20, 20);
+Sphere sphareCollider(10,10);
 Box boxCesped;
 Box boxWalls;
 Box boxHighway;
@@ -213,6 +215,10 @@ std::vector<float> lamp2Orientation = {
 	21.37 + 90, -65.0 + 90
 };
 
+//colider
+
+std::map<std::string,std::tuple<AbstractModel::SBB,glm::mat4,glm::mat4>> collidersSBB;
+
 double deltaTime;
 double currTime, lastTime;
 
@@ -295,6 +301,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	skyboxSphere.init();
 	skyboxSphere.setShader(&shaderSkybox);
 	skyboxSphere.setScale(glm::vec3(20.0f, 20.0f, 20.0f));
+
+	sphareCollider.init();
+	sphareCollider.setShader(&shaderMulLighting);
 
 	boxCesped.init();
 	boxCesped.setShader(&shaderMulLighting);
@@ -663,6 +672,7 @@ void destroy() {
 
 	// Basic objects Delete
 	skyboxSphere.destroy();
+	sphareCollider.destroy();
 	boxCesped.destroy();
 	boxWalls.destroy();
 	boxHighway.destroy();
@@ -1385,6 +1395,28 @@ void applicationLoop() {
 		skyboxSphere.render();
 		glCullFace(oldCullFaceMode);
 		glDepthFunc(oldDepthFuncMode);
+
+		//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+		//coliders XD
+		AbstractModel::SBB rockCollider;
+		glm::mat4 modelMatrixColliderRock = glm::mat4(matrixModelRock);
+		modelMatrixColliderRock = glm::scale(modelMatrixColliderRock, modelRock.getSbb().c);
+		// modelMatrixColliderRock = glm::translate(modelMatrixColliderRock, modelRock.getSbb().c);
+		rockCollider.c = modelMatrixColliderRock[3];
+		rockCollider.ratio = modelRock.getSbb().ratio * 1.0;
+		addOrUpdateColliders(collidersSBB, "rock", rockCollider, matrixModelRock);
+
+		//render del collider
+		std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator jt;
+		for (jt = collidersSBB.begin(); jt != collidersSBB.end(); jt++)
+		{
+			glm::mat4 matrixCollider = glm::mat4(1.0);
+			matrixCollider = glm::translate(matrixCollider, std::get<0>(jt->second).c);
+			matrixCollider = glm::scale(matrixCollider, glm::vec3(std::get<0>(jt->second).ratio * 2.0f));
+			esfera1.enableWireMode();
+			esfera1.render(matrixCollider);
+		}
+
 
 		
 		// Animaciones por keyframes dart Vader
