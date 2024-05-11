@@ -50,6 +50,8 @@ Shader shader;
 Shader shaderSkybox;
 //Shader con multiples luces
 Shader shaderMulLighting;
+// Shader del terreno
+Shader shaderTerrain;
 
 std::shared_ptr<FirstPersonCamera> camera(new FirstPersonCamera());
 
@@ -101,10 +103,13 @@ Model cowboyModelAnimate;
 Model guardianModelAnimate;
 // Cybog
 Model cyborgModelAnimate;
+// model lily
+Model modelLily;
 // Terrain model instance
-Terrain terrain(-1, -1, 200, 8, "../Textures/heightmap.png");
+Terrain terrain(-1, -1, 200, 8, "../Textures/blendMap.png");
 
 GLuint textureCespedID, textureWallID, textureWindowID, textureHighwayID, textureLandingPadID;
+GLuint textureRID, textureGID, textureBID, textureBlendMapID;
 GLuint skyboxTextureID;
 
 GLenum types[6] = {
@@ -138,6 +143,7 @@ glm::mat4 modelMatrixMayow = glm::mat4(1.0f);
 glm::mat4 modelMatrixCowboy = glm::mat4(1.0f);
 glm::mat4 modelMatrixGuardian = glm::mat4(1.0f);
 glm::mat4 modelMatrixCyborg = glm::mat4(1.0f);
+glm::mat4 modelMatrixLily = glm::mat4(1.0f);
 
 int animationMayowIndex = 1;
 float rotDartHead = 0.0, rotDartLeftArm = 0.0, rotDartLeftHand = 0.0, rotDartRightArm = 0.0, rotDartRightHand = 0.0, rotDartLeftLeg = 0.0, rotDartRightLeg = 0.0;
@@ -193,6 +199,10 @@ double currTime, lastTime;
 // Variables animacion maquina de estados eclipse
 const float avance = 0.1;
 const float giroEclipse = 0.5f;
+
+// Variables de animación [Lily]
+int numAni_Lily = 0;
+
 
 // Se definen todos las funciones.
 void reshapeCallback(GLFWwindow *Window, int widthRes, int heightRes);
@@ -261,7 +271,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	shader.initialize("../Shaders/colorShader.vs", "../Shaders/colorShader.fs");
 	shaderSkybox.initialize("../Shaders/skyBox.vs", "../Shaders/skyBox.fs");
 	shaderMulLighting.initialize("../Shaders/iluminacion_textura_animation.vs", "../Shaders/multipleLights.fs");
-
+	shaderTerrain.initialize("../Shaders/terrain.vs", "../Shaders/terrain.fs");
 	// Inicializacion de los objetos.
 	skyboxSphere.init();
 	skyboxSphere.setShader(&shaderSkybox);
@@ -359,6 +369,9 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	cowboyModelAnimate.loadModel("../models/cowboy/Character Running.fbx");
 	cowboyModelAnimate.setShader(&shaderMulLighting);
 
+	modelLily.loadModel("../models/Lily/ArturiaLily.fbx");
+	modelLily.setShader(&shaderMulLighting);
+
 	// Guardian
 	guardianModelAnimate.loadModel("../models/boblampclean/boblampclean.md5mesh");
 	guardianModelAnimate.setShader(&shaderMulLighting);
@@ -369,7 +382,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 
 	// Terreno
 	terrain.init();
-	terrain.setShader(&shaderMulLighting);
+	terrain.setShader(&shaderTerrain);
 
 	camera->setPosition(glm::vec3(0.0, 3.0, 4.0));
 	
@@ -396,7 +409,7 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	}
 
 	// Definiendo la textura a utilizar
-	Texture textureCesped("../Textures/grassy2.png");
+	Texture textureCesped("../Textures/TerrenoP_P4.jpg");
 	// Carga el mapa de bits (FIBITMAP es el tipo de dato de la libreria)
 	textureCesped.loadImage();
 	// Creando la textura con id 1
@@ -512,24 +525,100 @@ void init(int width, int height, std::string strTitle, bool bFullScreen) {
 	// Libera la memoria de la textura
 	textureHighway.freeImage();
 
-	// Definiendo la textura
-	Texture textureLandingPad("../Textures/landingPad.jpg");
-	textureLandingPad.loadImage(); // Cargar la textura
-	glGenTextures(1, &textureLandingPadID); // Creando el id de la textura del landingpad
-	glBindTexture(GL_TEXTURE_2D, textureLandingPadID); // Se enlaza la textura
+	// Texturas del blendmaping
+	
+	// Texture textureLandingPad("../Textures/landingPad.jpg");
+	// textureLandingPad.loadImage(); // Cargar la textura
+	// glGenTextures(1, &textureLandingPadID); // Creando el id de la textura del landingpad
+	// glBindTexture(GL_TEXTURE_2D, textureLandingPadID); // Se enlaza la textura
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
+	// glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
+	// if(textureLandingPad.getData()){
+	// 	// Transferir los datos de la imagen a la tarjeta
+	// 	glTexImage2D(GL_TEXTURE_2D, 0, textureLandingPad.getChannels() == 3 ? GL_RGB : GL_RGBA, textureLandingPad.getWidth(), textureLandingPad.getHeight(), 0,
+	// 	textureLandingPad.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureLandingPad.getData());
+	// 	glGenerateMipmap(GL_TEXTURE_2D);
+	// }
+	// else 
+	// 	std::cout << "Fallo la carga de textura" << std::endl;
+	// textureLandingPad.freeImage(); // Liberamos memoria
+	
+	Texture textureR("../Textures/TerrenoN_P4.jpg");
+	textureR.loadImage(); // Cargar la textura
+	glGenTextures(1, &textureRID); // Creando el id de la textura del landingpad
+	glBindTexture(GL_TEXTURE_2D, textureRID); // Se enlaza la textura
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
-	if(textureLandingPad.getData()){
+	if(textureR.getData()){
 		// Transferir los datos de la imagen a la tarjeta
-		glTexImage2D(GL_TEXTURE_2D, 0, textureLandingPad.getChannels() == 3 ? GL_RGB : GL_RGBA, textureLandingPad.getWidth(), textureLandingPad.getHeight(), 0,
-		textureLandingPad.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureLandingPad.getData());
+		glTexImage2D(GL_TEXTURE_2D, 0, textureR.getChannels() == 3 ? GL_RGB : GL_RGBA, textureR.getWidth(), textureR.getHeight(), 0,
+		textureR.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureR.getData());
 		glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	else 
 		std::cout << "Fallo la carga de textura" << std::endl;
-	textureLandingPad.freeImage(); // Liberamos memoria
+	textureR.freeImage(); // Liberamos memoria
+
+	// ********
+	Texture textureG("../Textures/TerrenoT_P4.jpg");
+	textureG.loadImage(); // Cargar la textura
+	glGenTextures(1, &textureGID); // Creando el id de la textura del landingpad
+	glBindTexture(GL_TEXTURE_2D, textureGID); // Se enlaza la textura
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
+	if(textureG.getData()){
+		// Transferir los datos de la imagen a la tarjeta
+		glTexImage2D(GL_TEXTURE_2D, 0, textureG.getChannels() == 3 ? GL_RGB : GL_RGBA, textureG.getWidth(), textureG.getHeight(), 0,
+		textureG.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureG.getData());
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+		std::cout << "Fallo la carga de textura" << std::endl;
+	textureG.freeImage(); // Liberamos memoria
+
+	// ********
+	Texture textureB("../Textures/TerrenoC_P4.jpg");
+	textureB.loadImage(); // Cargar la textura
+	glGenTextures(1, &textureBID); // Creando el id de la textura del landingpad
+	glBindTexture(GL_TEXTURE_2D, textureBID); // Se enlaza la textura
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
+	if(textureB.getData()){
+		// Transferir los datos de la imagen a la tarjeta
+		glTexImage2D(GL_TEXTURE_2D, 0, textureB.getChannels() == 3 ? GL_RGB : GL_RGBA, textureB.getWidth(), textureB.getHeight(), 0,
+		textureB.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureB.getData());
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+		std::cout << "Fallo la carga de textura" << std::endl;
+	textureB.freeImage(); // Liberamos memoria
+
+	// ********
+	Texture textureBlendMap("../Textures/blendMap_Camino.png");
+	textureBlendMap.loadImage(); // Cargar la textura
+	glGenTextures(1, &textureBlendMapID); // Creando el id de la textura del landingpad
+	glBindTexture(GL_TEXTURE_2D, textureBlendMapID); // Se enlaza la textura
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); // Wrapping en el eje u
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT); // Wrapping en el eje v
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // Filtering de minimización
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // Filtering de maximimizacion
+	if(textureBlendMap.getData()){
+		// Transferir los datos de la imagen a la tarjeta
+		glTexImage2D(GL_TEXTURE_2D, 0, textureBlendMap.getChannels() == 3 ? GL_RGB : GL_RGBA, textureBlendMap.getWidth(), textureBlendMap.getHeight(), 0,
+		textureBlendMap.getChannels() == 3 ? GL_RGB : GL_RGBA, GL_UNSIGNED_BYTE, textureBlendMap.getData());
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
+	else 
+		std::cout << "Fallo la carga de textura" << std::endl;
+	textureBlendMap.freeImage(); // Liberamos memoria
 
 }
 
@@ -543,6 +632,7 @@ void destroy() {
 	shader.destroy();
 	shaderMulLighting.destroy();
 	shaderSkybox.destroy();
+	shaderTerrain.destroy();
 
 	// Basic objects Delete
 	skyboxSphere.destroy();
@@ -586,6 +676,7 @@ void destroy() {
 	cowboyModelAnimate.destroy();
 	guardianModelAnimate.destroy();
 	cyborgModelAnimate.destroy();
+	modelLily.destroy();
 
 	// Terrains objects Delete
 	terrain.destroy();
@@ -597,6 +688,10 @@ void destroy() {
 	glDeleteTextures(1, &textureWindowID);
 	glDeleteTextures(1, &textureHighwayID);
 	glDeleteTextures(1, &textureLandingPadID);
+	glDeleteTextures(1, &textureRID);
+	glDeleteTextures(1, &textureGID);
+	glDeleteTextures(1, &textureBID);
+	glDeleteTextures(1, &textureBlendMapID);
 
 	// Cube Maps Delete
 	glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
@@ -666,7 +761,7 @@ bool processInput(bool continueApplication) {
 	if (enableCountSelected && glfwGetKey(window, GLFW_KEY_TAB) == GLFW_PRESS){
 		enableCountSelected = false;
 		modelSelected++;
-		if(modelSelected > 4)
+		if(modelSelected > 5)
 			modelSelected = 0;
 		if(modelSelected == 1)
 			fileName = "../animaciones/animation_dart_joints.txt";
@@ -811,6 +906,33 @@ bool processInput(bool continueApplication) {
 		animationMayowIndex = 0;
 	}
 
+	// Movimientos de [Lily]
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	{
+		modelMatrixLily = glm::rotate(modelMatrixLily, 0.02f, glm::vec3(0, 1, 0));
+		numAni_Lily = 0;
+	}
+	else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	{
+		modelMatrixLily = glm::rotate(modelMatrixLily, -0.02f, glm::vec3(0, 1, 0));
+		numAni_Lily = 0;
+	}
+	else
+		numAni_Lily = 1;
+
+	if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+	{
+		modelMatrixLily = glm::translate(modelMatrixLily, glm::vec3(0.0, 0.0, 0.02));
+		numAni_Lily = 0;
+	}
+	else if (modelSelected == 5 && glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	{
+		modelMatrixLily = glm::translate(modelMatrixLily, glm::vec3(0.0, 0.0, -0.02));
+		numAni_Lily = 0;
+	}
+	else
+		numAni_Lily = 1;
+
 	glfwPollEvents();
 	return continueApplication;
 }
@@ -849,6 +971,8 @@ void applicationLoop() {
 	modelMatrixGuardian = glm::rotate(modelMatrixGuardian, glm::radians(-90.0f), glm::vec3(1.0, 0.0, 0.0));
 
 	modelMatrixCyborg = glm::translate(modelMatrixCyborg, glm::vec3(5.0f, 0.05, 0.0f));
+
+	modelMatrixLily = glm::translate(modelMatrixLily, glm::vec3(20.0f, 0.0, -30.0f));
 
 	// Variables to interpolation key frames
 	fileName = "../animaciones/animation_dart_joints.txt";
@@ -895,6 +1019,11 @@ void applicationLoop() {
 					glm::value_ptr(projection));
 		shaderMulLighting.setMatrix4("view", 1, false,
 				glm::value_ptr(view));
+		// Settea la matriz de vista y projection al shader del terreno
+		shaderTerrain.setMatrix4("projection", 1, false,
+					glm::value_ptr(projection));
+		shaderTerrain.setMatrix4("view", 1, false,
+				glm::value_ptr(view));
 
 		/*******************************************
 		 * Propiedades Luz direccional
@@ -905,29 +1034,57 @@ void applicationLoop() {
 		shaderMulLighting.setVectorFloat3("directionalLight.light.specular", glm::value_ptr(glm::vec3(0.9, 0.9, 0.9)));
 		shaderMulLighting.setVectorFloat3("directionalLight.direction", glm::value_ptr(glm::vec3(-1.0, 0.0, 0.0)));
 
+		shaderTerrain.setVectorFloat3(
+			"viewPos", glm::value_ptr(camera->getPosition()));
+		shaderTerrain.setVectorFloat3(
+			"directionalLight.light.ambient", glm::value_ptr(glm::vec3(0.3, 0.3, 0.3)));
+		shaderTerrain.setVectorFloat3(
+			"directionalLight.light.diffuse", glm::value_ptr(glm::vec3(0.7, 0.7, 0.7)));
+		shaderTerrain.setVectorFloat3(
+			"directionalLight.light.specular", glm::value_ptr(glm::vec3(0.9, 0.9, 0.9)));
+		shaderTerrain.setVectorFloat3(
+			"directionalLight.direction", glm::value_ptr(glm::vec3(-1.0, 0.0, 0.0)));
+
 		/*******************************************
 		 * Propiedades SpotLights
 		 *******************************************/
 		shaderMulLighting.setInt("spotLightCount", 0);
+		shaderTerrain.setInt("spotLightCount", 0);
 
 		/*******************************************
 		 * Propiedades PointLights
 		 *******************************************/
 		shaderMulLighting.setInt("pointLightCount", 0);
+		shaderTerrain.setInt("pointLightCount", 0);
 
 		/*******************************************
 		 * Terrain Cesped
 		 *******************************************/
-		glm::mat4 modelCesped = glm::mat4(1.0);
-		modelCesped = glm::translate(modelCesped, glm::vec3(0.0, 0.0, 0.0));
-		modelCesped = glm::scale(modelCesped, glm::vec3(200.0, 0.001, 200.0));
-		// Se activa la textura del agua
+		// Se activa la textura del pasto
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, textureCespedID);
-		shaderMulLighting.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(80, 80)));
+		shaderTerrain.setInt("backgroundTexture", 0);
+
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, textureRID);
+		shaderTerrain.setInt("textureR", 1);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, textureGID);
+		shaderTerrain.setInt("textureG", 2);
+
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, textureBID);
+		shaderTerrain.setInt("textureB", 3);
+
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, textureBlendMapID);
+		shaderTerrain.setInt("textureBlendMap", 4);
+
+		shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(80, 80)));
 		terrain.setPosition(glm::vec3(100, 0, 100));
 		terrain.render();
-		shaderMulLighting.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
+		shaderTerrain.setVectorFloat2("scaleUV", glm::value_ptr(glm::vec2(0, 0)));
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		/*******************************************
@@ -1112,6 +1269,28 @@ void applicationLoop() {
 		modelMatrixCyborgBody = glm::scale(modelMatrixCyborgBody, glm::vec3(0.009f));
 		cyborgModelAnimate.setAnimationIndex(1);
 		cyborgModelAnimate.render(modelMatrixCyborgBody);
+
+
+		// [Lily]
+		// Para que camine sobre el plano
+		modelMatrixLily[3][1] = terrain.getHeightTerrain(
+			modelMatrixLily[3][0], modelMatrixLily[3][2]);
+		// Para que se incline respecto a la normal
+		glm::vec3 ejey_lily = glm::normalize(
+			terrain.getNormalTerrain(
+				modelMatrixLily[3][0], modelMatrixLily[3][2]));
+		glm::vec3 ejez_lily = glm::normalize(modelMatrixLily[2]);
+		glm::vec3 ejex_lily = glm::normalize(glm::cross(ejey_lily, ejez_lily));
+		ejez_lily = glm::normalize(glm::cross(ejex_lily, ejey_lily));
+		modelMatrixLily[0] = glm::vec4(ejex_lily, 0.0);
+		modelMatrixLily[1] = glm::vec4(ejey_lily, 0.0);
+		modelMatrixLily[2] = glm::vec4(ejez_lily, 0.0);
+
+		glm::mat4 renderMatrixLily = glm::mat4(modelMatrixLily);
+		renderMatrixLily = glm::scale(renderMatrixLily, glm::vec3(0.02f, 0.02f, 0.02f));
+
+		modelLily.setAnimationIndex(numAni_Lily);
+		modelLily.render(renderMatrixLily);
 
 		/*******************************************
 		 * Skybox
