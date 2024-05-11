@@ -222,7 +222,7 @@ double currTime, lastTime;
 bool isJump = false;
 float GRAVITY = 1.81;
 float tmv = 0.0; // tiro parabócilo
-float startTimeJump = 0.0;
+double startTimeJump = 0.0;
 
 // Colliders
 std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>> collidersSBB;
@@ -848,9 +848,11 @@ bool processInput(bool continueApplication)
 		std::cout << "axes ? " << axes[2] << std::endl;
 		//abajo - .01
 		std::cout << "axes ? " << axes[3] << std::endl;
-*/
 std::cout << "Right Trigger/RT: " << axes[5] << std::endl;
 std::cout << "Left Trigger/LT: " << axes[4] << std::endl;
+
+*/
+
 
 		if(fabs(axes[1]) > 0.2){
 			modelMatrixMayow = glm::translate(modelMatrixMayow, glm::vec3(0, 0, -axes[1] * 0.1));
@@ -867,8 +869,15 @@ std::cout << "Left Trigger/LT: " << axes[4] << std::endl;
 		}
 
 		
-
-		
+		const unsigned char * buttons = glfwGetJoystickButtons(GLFW_JOYSTICK_1, &buttonCount);
+		std::cout << "Número de botones disponibles :=>" << buttonCount << std::endl;
+		if(buttons[0] == GLFW_PRESS)
+				std::cout << "Se presiona A" << std::endl;
+		if(!isJump && buttons[0] == GLFW_PRESS){
+			isJump = true;
+			startTimeJump = currTime;
+			tmv = 0;
+		}
 
 
 	}
@@ -1472,7 +1481,7 @@ void applicationLoop()
 		float alturaActual = terrain.getHeightTerrain(
 			modelMatrixMayow[3][0], modelMatrixMayow[3][2]);
 		// cte de velocidad inicial = 3.1
-		modelMatrixMayow[3][1] = -GRAVITY * tmv * tmv + 3.1 * tmv + alturaActual;
+		modelMatrixMayow[3][1] = -4 * tmv * tmv + 3.9 * tmv + alturaActual;
 		tmv = currTime - startTimeJump;
 		if (modelMatrixMayow[3][1] <= alturaActual)
 		{
@@ -1589,7 +1598,7 @@ void applicationLoop()
 		modelMatrixColliderMayow = glm::translate(modelMatrixColliderMayow, mayowModelAnimate.getObb().c);
 		mayowCollider.c = modelMatrixColliderMayow[3];
 		mayowCollider.e = mayowModelAnimate.getObb().e * glm::vec3(0.021) * glm::vec3(0.75);
-		addOrUpdateColliders(collidersOBB, "mayow", mayowCollider, modelMatrixAircraft);
+		addOrUpdateColliders(collidersOBB, "mayow", mayowCollider, modelMatrixMayowBody);
 
 		// ******************** Render de colliders ********************
 		std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator it;
@@ -1675,13 +1684,14 @@ void applicationLoop()
 					isCollision = true;
 					addOrUpdateCollisionDetection(collisionDetector, jtSBB->first, true);
 				}
+
 			}
 			addOrUpdateCollisionDetection(collisionDetector, itOBB->first, isCollision);
 		}
 
-		// hay un error que no deja avanzar a "mayow"
+		
 		std::map<std::string, bool>::iterator itCollider = collisionDetector.begin();
-		for (; itCollider != collisionDetector.end(); itCollider++)
+		for (itCollider != collisionDetector.begin(); itCollider != collisionDetector.end(); itCollider++)
 		{
 			std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator SBBBusqueda = collidersSBB.find(itCollider->first);
 			std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator OBBBusqueda = collidersOBB.find(itCollider->first);
