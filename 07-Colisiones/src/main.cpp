@@ -202,6 +202,10 @@ float rotHelHelBack = 0.0;
 int stateDoor = 0;
 float dorRotCount = 0.0;
 
+
+//interacciones XD
+bool isPicking=false;
+
 // Lamps position
 std::vector<glm::vec3> lamp1Position = {
 	glm::vec3(-7.03, 0, -19.14),
@@ -1693,8 +1697,10 @@ void applicationLoop()
 		std::map<std::string, bool>::iterator itCollider = collisionDetector.begin();
 		for (itCollider != collisionDetector.begin(); itCollider != collisionDetector.end(); itCollider++)
 		{
-			std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::iterator SBBBusqueda = collidersSBB.find(itCollider->first);
-			std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::iterator OBBBusqueda = collidersOBB.find(itCollider->first);
+			std::map<std::string, std::tuple<AbstractModel::SBB, glm::mat4, glm::mat4>>::
+			iterator SBBBusqueda = collidersSBB.find(itCollider->first);
+			std::map<std::string, std::tuple<AbstractModel::OBB, glm::mat4, glm::mat4>>::
+			iterator OBBBusqueda = collidersOBB.find(itCollider->first);
 			if (SBBBusqueda != collidersSBB.end()) // lo encontró en SBB
 			{
 				if (!itCollider->second)
@@ -1740,6 +1746,14 @@ void applicationLoop()
 				std::cout << "Colision del rayo con el modelo" << itOBB->first << std::endl;
 			}
 		}
+
+
+if (isPicking){
+	glm::vec4 Viewport = glm::vec4(0.0,0.0, screenWidth,screenHeight);
+	glm::vec3 operator=
+		glm::uProyect()
+}
+
 		// ************** fin pruebas de colisiones **************
 
 		// Animaciones por keyframes dart Vader
